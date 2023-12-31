@@ -1,65 +1,51 @@
 "use client";
 import React, { useState, useEffect, FormEvent } from "react";
-import axios from "axios";
+import * as yup from "yup";
 import Link from "next/link";
 import { ToastOptions, toast } from "react-toastify";
+import { useFormik } from "formik";
+import register from "../../../../server/auth/register";
+import { useRouter } from "next/navigation";
+import { registerResponseEnum } from "../../../../server/auth/types";
+const schema = yup.object().shape({
+  password: yup
+    .string()
+    .required('Password is required')
+    .min(8, 'Password must be at least 8 characters long'),
+  confirm_password: yup
+    .string()
+    .oneOf([yup.ref('password'),null as never], 'Passwords must match')
+    .required('Password confirmation is required'),
+});
+
+
 
 export default function RegisterForm() {
-  const toastOptions: ToastOptions = {
-    position: "bottom-right",
-    autoClose: 8000,
-    pauseOnHover: true,
-    draggable: true,
-    theme: "dark",
-  };
-  const [values, setValues] = useState({
-    username: "",
-    email: "",
-    password: "",
-    confirmPassword: "",
+  const router = useRouter()
+  const formik = useFormik({
+    initialValues: {
+      name: "",
+      email: "",
+      password: "",
+      confirmPassword: "",
+    },
+    onSubmit: async (values) => {
+      const res = await register({
+        email: values.email,
+        name: values.name,
+        password: values.password
+      });
+      if (res.status == registerResponseEnum.exist) toast.error("email deja utilisé ");
+      else {
+        router.push("/")
+      }
+    },
   });
-
-  const handleValidation = () => {
-    const { password, confirmPassword, username, email } = values;
-    if (password !== confirmPassword) {
-      toast.error("Les mots de passes ne sont pas identiques.", toastOptions);
-      return false;
-    } else if (username.length < 3) {
-      toast.error(
-        "Le nom d'utilisateur doit dépasser 3 lettres.",
-        toastOptions
-      );
-      return false;
-    } else if (password.length < 8) {
-      toast.error(
-        "Mot de passe doit avoir 8 caractères mniimum.",
-        toastOptions
-      );
-      return false;
-    } else if (email === "") {
-      toast.error("Email est requis.", toastOptions);
-      return false;
-    }
-
-    return true;
-  };
-
-  function handleChange(event: React.ChangeEvent<HTMLInputElement>): void {
-    setValues({ ...values, [event.target.name]: event.target.value });
-  }
-
-  function handleSubmit(event: FormEvent<HTMLFormElement>): void {
-    event.preventDefault();
-    if (handleValidation()) {
-      const { email, username, password } = values;
-    }
-  }
-
   return (
     <div className="h-screen w-screen flex flex-col justify-center items-center gap-4 bg-[#131324]">
       <form
         action=""
-        onSubmit={handleSubmit}
+        onSubmit={formik.handleSubmit}
         className="flex flex-col items-center gap-8 bg-[#00000076] rounded-2xl p-12 w-full max-w-[calc(100vw-10rem)]"
       >
         <div className="flex items-center gap-4">
@@ -70,8 +56,9 @@ export default function RegisterForm() {
         <input
           type="text"
           placeholder="Nom d'utilisateur"
-          name="username"
-          onChange={(e) => handleChange(e)}
+          name="name"
+          readOnly={formik.isSubmitting}
+          onChange={formik.handleChange}
           className="bg-transparent p-4 border border-[#4e0eff] rounded-md text-white w-full text-lg focus:border-[#997af0] focus:outline-none"
         />
 
@@ -79,7 +66,8 @@ export default function RegisterForm() {
           type="email"
           placeholder="Email"
           name="email"
-          onChange={(e) => handleChange(e)}
+          readOnly={formik.isSubmitting}
+          onChange={formik.handleChange}
           className="bg-transparent p-4 border border-[#4e0eff] rounded-md text-white w-full text-lg focus:border-[#997af0] focus:outline-none"
         />
 
@@ -87,7 +75,8 @@ export default function RegisterForm() {
           type="password"
           placeholder="Mot de passe"
           name="password"
-          onChange={(e) => handleChange(e)}
+          readOnly={formik.isSubmitting}
+          onChange={formik.handleChange}
           className="bg-transparent p-4 border border-[#4e0eff] rounded-md text-white w-full text-lg focus:border-[#997af0] focus:outline-none"
         />
 
@@ -95,10 +84,20 @@ export default function RegisterForm() {
           type="password"
           placeholder="Confirmer mot de passe"
           name="confirmPassword"
-          onChange={(e) => handleChange(e)}
+          readOnly={formik.isSubmitting}
+          onChange={formik.handleChange}
           className="bg-transparent p-4 border border-[#4e0eff] rounded-md text-white w-full text-lg focus:border-[#997af0] focus:outline-none"
         />
+        <div className="text-white">
+          <p>
+          {formik.errors.confirmPassword
+          }        </p>
+        <p>
+          {formik.errors.password
+          }        </p>
+       
 
+        </div>
         <button
           type="submit"
           className="bg-[#4e0eff] text-white py-4 px-8 border-none font-bold cursor-pointer rounded-md text-lg uppercase"

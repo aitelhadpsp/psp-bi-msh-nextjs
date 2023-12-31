@@ -1,9 +1,9 @@
 "use server";
+
 import prisma from "../../prisma/client";
-enum responsenum {
-  success,
-  exist,
-}
+import Hash from "../utils/Hash";
+import { registerResponseEnum } from "./types";
+
 type data = {
   email: string;
   password: string;
@@ -11,7 +11,7 @@ type data = {
 };
 export default async function register(data: data) {
   const response = {
-    status: responsenum.exist,
+    status: registerResponseEnum.exist,
     data: "",
   };
   const user = await prisma.user.findUnique({
@@ -20,15 +20,17 @@ export default async function register(data: data) {
     },
   });
 
+  const password =Hash.make(data.password)
+
   if (user == null) {
     const user = await prisma.user.create({
       data: {
         name: data.name,
         email: data.email,
-        passwordHash: data.password,
+        passwordHash: Hash.make(data.password),
       },
     });
-    response.status = responsenum.success;
+    response.status = registerResponseEnum.success;
     return response;
   }
   return response;

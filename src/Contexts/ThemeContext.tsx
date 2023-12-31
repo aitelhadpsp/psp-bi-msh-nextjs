@@ -16,7 +16,7 @@ const initialContextState = {
   currentColor: "#03C9D7",
   currentMode: "Light",
   activeMenu: true,
-  screenSize: undefined,
+  screenSize: 0,
   handleClick: (clicked: any) => {},
   setScreenSize: (clicked: any) => {},
   isClicked: initialState,
@@ -33,7 +33,7 @@ const initialContextState = {
 const StateContext = createContext(initialContextState);
 
 export const ThemeProvider = ({ children }: any) => {
-  const [screenSize, setScreenSize] = useState(undefined);
+  const [screenSize, setScreenSize] = useState(0);
   const [currentColor, setCurrentColor] = useState("#03C9D7");
   const [currentMode, setCurrentMode] = useState("Light");
   const [themeSettings, setThemeSettings] = useState(false);

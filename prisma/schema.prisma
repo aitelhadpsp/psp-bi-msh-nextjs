@@ -6,11 +6,11 @@ generator client {
 }
 
 datasource db {
-  provider = "mongodb"
+  provider = "mysql"
   url      = env("DATABASE_URL")
 }
 
-enum UserStatus {
+enum UserRole {
   SuperAdmin
   Admin
   Visitor
@@ -20,12 +20,14 @@ model User {
   id String @id @default(cuid()) @map("_id")
   name String 
   email String @unique
-  role UserStatus @default(Visitor)
+  role UserRole @default(Visitor)
   passwordHash String 
   emailVerified DateTime?
   emailVerificationCode String?
   avatarId String? @unique
   avatar Document?  @relation(fields: [avatarId],references: [id])
+  blogs Blog[]
+  
 }
 
 model Document {
@@ -34,4 +36,31 @@ model Document {
   path String
   url String
   user User? 
+  blog Blog?
+}
+model Category{
+  id String @id @default(cuid()) @map("_id")
+  label String
+  color String
+  CategoryBlogs BlogCategory[]
+}
+
+model BlogCategory{
+  blogId String @unique
+  categoryId String @unique
+  category Category @relation(fields: [categoryId], references: [id])
+  blog Blog  @relation(fields: [blogId], references: [id])
+}
+
+model Blog{
+  id String @id @default(cuid()) @map("_id")
+  title String
+  content String @db.LongText
+  publishedAt DateTime?
+  categories BlogCategory[] 
+  authorId String
+  imageId String  @unique
+  image Document @relation(fields: [imageId], references: [id])
+  author User @relation(fields:[authorId],references: [id])
+
 }

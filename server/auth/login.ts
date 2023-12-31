@@ -4,9 +4,12 @@ import Hash from "../utils/Hash";
 import { cookies } from "next/headers";
 import jwt from "jsonwebtoken";
 import { redirect } from "next/navigation";
+import * as jose from 'jose';
+
+
 
 export default async function login(username: string, password: string) {
-  var user = await prisma.user.findUnique({
+  var user = await prisma.user.findFirst({
     where: {
       email: username,
     },
@@ -14,23 +17,36 @@ export default async function login(username: string, password: string) {
   if (user == null) {
     return false;
   }
+
+
   const isAuth = Hash.verify(password, user.passwordHash);
-  const expiresIn = new Date(new Date().setMonth(new Date().getMonth() + 1));
+  
   if (isAuth) {
-    const configs = new Map<string, any>();
-    configs.set("userId", user.name);
-    configs.set("role", user.role);
+    const expiresIn = new Date(new Date().setMonth(new Date().getMonth() + 1));
+    const secret = new TextEncoder().encode(
+      process.env.JWT_SECRET
+    )
+    const alg = 'HS256'
+
+
+    const jwt = await new jose.SignJWT({
+
+      "userId": user.id,
+      "fullName": user.name,
+      "role": user.role
+
+    })
+      .setProtectedHeader({ alg })
+      .setIssuedAt()
+      .setExpirationTime(expiresIn)
+
+      .sign(secret)
+
+    console.log(jwt);
 
     cookies().set({
       name: "authToken",
-      value: jwt.sign(
-        Object.fromEntries(configs),
-        process.env.JWT_SECRET as string,
-        {
-          expiresIn: expiresIn.getTime(),
-          algorithm: "HS256",
-        }
-      ),
+      value: jwt,
       expires: expiresIn,
       httpOnly: true,
       secure: true,

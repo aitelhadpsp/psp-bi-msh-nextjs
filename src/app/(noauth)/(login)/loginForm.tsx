@@ -1,17 +1,10 @@
 "use client";
 import React, { FormEvent, useState } from "react";
-import { ToastOptions, toast } from "react-toastify";
 import Link from "next/link";
 import login from "../../../../server/auth/login";
 import { useFormik } from "formik";
+import toast from "react-hot-toast";
 export default function LoginForm() {
-  const toastOptions: ToastOptions = {
-    position: "bottom-right",
-    autoClose: 8000,
-    pauseOnHover: true,
-    draggable: true,
-    theme: "dark",
-  };
 
   const formik = useFormik({
     initialValues: {
@@ -20,8 +13,8 @@ export default function LoginForm() {
     },
     onSubmit: async ({ password, username }) => {
       const res = await login(username, password);
-      if (!res) toast.error("Email ou mot de passe incorrect !", toastOptions);
-      else toast.success("Connexion réussie !", toastOptions);
+      if (res == false) toast.error("Email ou mot de passe incorrect !");
+      else toast.success("Connexion réussie !");
     },
   });
 
@@ -53,8 +46,8 @@ export default function LoginForm() {
           onChange={formik.handleChange}
         />
         <button
-          type="button"
-          onClick={(e) => formik.submitForm()}
+          type="submit"
+          
           disabled={formik.isSubmitting}
           className="bg-[#4e0eff] text-white py-4 px-8 border-none font-bold cursor-pointer rounded-md text-lg uppercase hover:bg-[#4e0eff]"
         >
